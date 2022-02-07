@@ -67,6 +67,7 @@ func exec(lineClient *linebot.Client, visClient *vision.ImageAnnotatorClient, ct
 	if err = sendLINEMessageWithMatchWebPages(lineClient, replyToken, detectionWebPages); err != nil {
 		return err
 	}
+	return nil
 }
 
 func sendLINEMessageWithMatchWebPages(lineClient *linebot.Client, replyToken string, detectionWebPages []*detectionWebPage) error {
@@ -115,6 +116,7 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 			}
 		}
 	}
+	return nil, "", errors.New("failed extract image from line message")
 }
 
 func checkReprint(file *os.File, visClient *vision.ImageAnnotatorClient, ctx context.Context) ([]*detectionWebPage, error) {
