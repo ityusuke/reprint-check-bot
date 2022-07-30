@@ -67,12 +67,7 @@ func exec(lineClient *linebot.Client, visClient *vision.ImageAnnotatorClient, ct
 		return err
 	}
 	log.Println("start extractImageFromLINEMessage")
-	file, replyToken, err := extractImageFromLINEMessage(lineClient, events)
-	if err != nil {
-		return err
-	}
-	log.Println("start checkReprint")
-	detectionWebPages, err := checkReprint(file, visClient, ctx)
+	replyToken, detectionWebPages, err := extractImageFromLINEMessage(lineClient, events, visClient, ctx)
 	if err != nil {
 		return err
 	}
@@ -106,61 +101,78 @@ func sendLINEMessageWithMatchWebPages(lineClient *linebot.Client, replyToken str
 	return errors.New("failed to send line message")
 }
 
-func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.Event) (*os.File, string, error) {
+func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.Event, visClient *vision.ImageAnnotatorClient, ctx context.Context) (string, []*detectionWebPage, error) {
 	for _, event := range events {
 		if event.Type == linebot.EventTypeMessage {
 			switch message := event.Message.(type) {
 			case *linebot.ImageMessage:
 				file, err := os.Create("sample.png")
-				log.Println(file)
 				if err != nil {
-					return nil, "", err
+					return "", nil, err
 				}
+				defer file.Close()
 
-				log.Println("GetMessageContent")
 				content, err := lineClient.GetMessageContent(message.ID).Do()
 				if err != nil {
-					return nil, "", err
+					return "", nil, err
 				}
-				log.Println(content)
 				defer content.Content.Close()
-				io.Copy(file, content.Content)
-				log.Println(file)
-				return file, event.ReplyToken, nil
+				_, err = io.Copy(file, content.Content)
+				if err != nil {
+					return "", nil, err
+				}
+
+				image, err := vision.NewImageFromReader(file)
+				defer file.Close()
+				if err != nil {
+					log.Println(err)
+					return "", nil, err
+				}
+				log.Println(image)
+
+				detectionWebPages := make([]*detectionWebPage, 0)
+
+				log.Println("start DetectWeb")
+				detection, err := visClient.DetectWeb(ctx, image, nil)
+				if err != nil {
+					log.Println(err)
+					return "", nil, err
+				}
+
+				log.Println("start GetPagesWithMatchingImages")
+				matchImages := detection.GetPagesWithMatchingImages()
+				log.Println(matchImages)
+				for _, matchImage := range matchImages {
+					detectionWebPages = append(detectionWebPages, &detectionWebPage{matchImage.Url, matchImage.PageTitle})
+				}
+				return event.ReplyToken, detectionWebPages, nil
 			default:
 				if _, err := lineClient.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("画像を送信してください")).Do(); err != nil {
-					return nil, "", err
+					return event.ReplyToken, nil, err
 				}
 			}
 		}
 	}
-	return nil, "", errors.New("failed extract image from line message")
+	return "", nil, errors.New("failed extract image from line message")
 }
 
-func checkReprint(file *os.File, visClient *vision.ImageAnnotatorClient, ctx context.Context) ([]*detectionWebPage, error) {
-	detectionWebPages := make([]*detectionWebPage, 0)
-
-	image, err := vision.NewImageFromReader(file)
-	defer file.Close()
-	if err != nil {
-		log.Println(err)
-		return detectionWebPages, err
-	}
-	log.Println(image)
-
-	log.Println("start DetectWeb")
-	detection, err := visClient.DetectWeb(ctx, image, nil)
-	if err != nil {
-		log.Println(err)
-		return detectionWebPages, err
-	}
-
-	log.Println("start GetPagesWithMatchingImages")
-	matchImages := detection.GetPagesWithMatchingImages()
-	log.Println(matchImages)
-	for _, matchImage := range matchImages {
-		detectionWebPages = append(detectionWebPages, &detectionWebPage{matchImage.Url, matchImage.PageTitle})
-	}
-
-	return detectionWebPages, nil
-}
+//func checkReprint(file *os.File, visClient *vision.ImageAnnotatorClient, ctx context.Context) ([]*detectionWebPage, error) {
+//	detectionWebPages := make([]*detectionWebPage, 0)
+//
+//
+//	log.Println("start DetectWeb")
+//	detection, err := visClient.DetectWeb(ctx, image, nil)
+//	if err != nil {
+//		log.Println(err)
+//		return detectionWebPages, err
+//	}
+//
+//	log.Println("start GetPagesWithMatchingImages")
+//	matchImages := detection.GetPagesWithMatchingImages()
+//	log.Println(matchImages)
+//	for _, matchImage := range matchImages {
+//		detectionWebPages = append(detectionWebPages, &detectionWebPage{matchImage.Url, matchImage.PageTitle})
+//	}
+//
+//	return detectionWebPages, nil
+//}
