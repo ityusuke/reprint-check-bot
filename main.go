@@ -140,7 +140,7 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 				detectionWebPages := make([]*detectionWebPage, 0)
 
 				log.Println("start DetectWeb")
-				detection, err := visClient.DetectWeb(ctx, file, nil)
+				detection, err := visClient.DetectWeb(ctx, image, nil)
 				if err != nil {
 					log.Println(err)
 					return "", nil, err
