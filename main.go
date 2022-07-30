@@ -30,7 +30,8 @@ const (
 )
 
 func main() {
-
+	log.Println("application entry")
+	log.Println("gen bis cli")
 	jwtConfig, err := google.JWTConfigFromJSON([]byte(os.Getenv(OpenVisionAPICredential)))
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// LINE Message API のクライアントを初期化
+	log.Println("gen line cli")
 	lineClient, err := linebot.New(os.Getenv(lineMessageAPIChannelSecretKey), os.Getenv(lineMessageAPIChannelTokenKey))
 	if err != nil {
 		log.Fatal(err)
@@ -58,14 +59,17 @@ func main() {
 }
 
 func exec(lineClient *linebot.Client, visClient *vision.ImageAnnotatorClient, ctx context.Context, c *gin.Context) error {
+	log.Println("start exec")
 	events, err := lineClient.ParseRequest(c.Request)
 	if err != nil {
 		return err
 	}
+	log.Println("start extractImageFromLINEMessage")
 	file, replyToken, err := extractImageFromLINEMessage(lineClient, events)
 	if err != nil {
 		return err
 	}
+	log.Println("start checkReprint")
 	detectionWebPages, err := checkReprint(file, visClient, ctx)
 	if err != nil {
 		return err
