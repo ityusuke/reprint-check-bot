@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -117,10 +117,15 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 					return "", nil, err
 				}
 				defer content.Content.Close()
-				_, err = io.Copy(file, content.Content)
-				if err != nil {
-					return "", nil, err
-				}
+				byte, err := ioutil.ReadAll(content.Content)
+				_, err = file.Write(byte)
+				//if err != nil {
+				//	return err
+				//}
+				//_, err = io.Copy(file, byte)
+				//if err != nil {
+				//	return "", nil, err
+				//}
 				log.Println(file.Name())
 				log.Println(file.Stat())
 				log.Println("start NewImageFromReader")
@@ -135,7 +140,7 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 				detectionWebPages := make([]*detectionWebPage, 0)
 
 				log.Println("start DetectWeb")
-				detection, err := visClient.DetectWeb(ctx, image, nil)
+				detection, err := visClient.DetectWeb(ctx, file, nil)
 				if err != nil {
 					log.Println(err)
 					return "", nil, err
