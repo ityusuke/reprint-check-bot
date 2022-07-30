@@ -31,7 +31,7 @@ const (
 func main() {
 	log.Println("application entry")
 	log.Println("gen bis cli")
-	jwtConfig, err := google.JWTConfigFromJSON([]byte(os.Getenv(OpenVisionAPICredential)))
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(os.Getenv(OpenVisionAPICredential)), vision.DefaultAuthScopes()...)
 	if err != nil {
 		log.Fatal(err)
 	}
