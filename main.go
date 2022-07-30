@@ -125,7 +125,7 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 				log.Println(file.Stat())
 				log.Println("start NewImageFromReader")
 				image, err := vision.NewImageFromReader(file)
-				defer file.Close()
+				log.Println(err)
 				if err != nil {
 					log.Println(err)
 					return "", nil, err
@@ -141,6 +141,7 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 					return "", nil, err
 				}
 
+				defer file.Close()
 				log.Println("start GetPagesWithMatchingImages")
 				matchImages := detection.GetPagesWithMatchingImages()
 				log.Println(matchImages)
