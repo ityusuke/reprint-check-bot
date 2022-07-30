@@ -49,12 +49,12 @@ func main() {
 
 	engine := gin.Default()
 	engine.GET("/ping", func(c *gin.Context) {
-		log.Print("pong")
+		log.Println("pong")
 	})
 	engine.POST(lineMessageAPICallBackEndpoint, func(c *gin.Context) {
 		err = exec(lineClient, visClient, ctx, c)
 		if err != nil {
-			log.Print(err)
+			log.Println(err)
 		}
 	})
 	engine.Run(":" + os.Getenv("PORT"))
@@ -115,7 +115,6 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 				if err != nil {
 					return nil, "", err
 				}
-				defer file.Close()
 
 				content, err := lineClient.GetMessageContent(message.ID).Do()
 				if err != nil {
@@ -138,7 +137,9 @@ func checkReprint(file *os.File, visClient *vision.ImageAnnotatorClient, ctx con
 	detectionWebPages := make([]*detectionWebPage, 0)
 
 	image, err := vision.NewImageFromReader(file)
+	defer file.Close()
 	if err != nil {
+		log.Println(err)
 		return detectionWebPages, err
 	}
 	log.Println(image)
