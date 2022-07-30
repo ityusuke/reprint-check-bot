@@ -26,7 +26,6 @@ const (
 	lineMessageAPIChannelTokenKey  = "LINE_BOT_CHANNEL_TOKEN"
 	OpenVisionAPICredential        = "GOOGLE_APPLICATION_CREDENTIALS"
 	lineMessageAPICallBackEndpoint = "/callback"
-	port                           = ":3001"
 )
 
 func main() {
@@ -55,7 +54,7 @@ func main() {
 			log.Print(err)
 		}
 	})
-	engine.Run(port)
+	engine.Run(":" + os.Getenv("PORT"))
 }
 
 func exec(lineClient *linebot.Client, visClient *vision.ImageAnnotatorClient, ctx context.Context, c *gin.Context) error {
