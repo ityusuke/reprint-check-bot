@@ -2,11 +2,13 @@ package main
 
 import (
 	vision "cloud.google.com/go/vision/apiv1"
-	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 	"io"
 	"log"
 	"os"
@@ -22,16 +24,19 @@ type (
 const (
 	lineMessageAPIChannelSecretKey = "CHANNEL_SECRET"
 	lineMessageAPIChannelTokenKey  = "CHANNEL_TOKEN"
+	OpenVisionAPICredential        = "GOOGLE_APPLICATION_CREDENTIALS"
 	lineMessageAPICallBackEndpoint = "/callback"
 	port                           = ":3001"
 )
 
 func main() {
-	engine := gin.Default()
-	ctx := context.Background()
 
-	// Open Vision API のクライアントを初期化
-	visClient, err := vision.NewImageAnnotatorClient(ctx)
+	jwtConfig, err := google.JWTConfigFromJSON([]byte(os.Getenv(OpenVisionAPICredential)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+	visClient, err := vision.NewImageAnnotatorClient(ctx, option.WithTokenSource(jwtConfig.TokenSource(ctx)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,6 +47,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	engine := gin.Default()
 	engine.GET(lineMessageAPICallBackEndpoint, func(c *gin.Context) {
 		err = exec(lineClient, visClient, ctx, c)
 		if err != nil {
