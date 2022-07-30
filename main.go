@@ -22,8 +22,8 @@ type (
 )
 
 const (
-	lineMessageAPIChannelSecretKey = "CHANNEL_SECRET"
-	lineMessageAPIChannelTokenKey  = "CHANNEL_TOKEN"
+	lineMessageAPIChannelSecretKey = "LINE_BOT_CHANNEL_SECRET"
+	lineMessageAPIChannelTokenKey  = "LINE_BOT_CHANNEL_TOKEN"
 	OpenVisionAPICredential        = "GOOGLE_APPLICATION_CREDENTIALS"
 	lineMessageAPICallBackEndpoint = "/callback"
 	port                           = ":3001"
