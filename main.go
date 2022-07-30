@@ -76,6 +76,9 @@ func exec(lineClient *linebot.Client, visClient *vision.ImageAnnotatorClient, ct
 	if err != nil {
 		return err
 	}
+	log.Println("end checkReprint")
+	log.Println(detectionWebPages)
+	log.Println("start sendLINEMessageWithMatchWebPages")
 	if err = sendLINEMessageWithMatchWebPages(lineClient, replyToken, detectionWebPages); err != nil {
 		return err
 	}
@@ -138,13 +141,18 @@ func checkReprint(file *os.File, visClient *vision.ImageAnnotatorClient, ctx con
 	if err != nil {
 		return detectionWebPages, err
 	}
+	log.Println(image)
 
+	log.Println("start DetectWeb")
 	detection, err := visClient.DetectWeb(ctx, image, nil)
 	if err != nil {
+		log.Println(err)
 		return detectionWebPages, err
 	}
 
+	log.Println("start GetPagesWithMatchingImages")
 	matchImages := detection.GetPagesWithMatchingImages()
+	log.Println(matchImages)
 	for _, matchImage := range matchImages {
 		detectionWebPages = append(detectionWebPages, &detectionWebPage{matchImage.Url, matchImage.PageTitle})
 	}
