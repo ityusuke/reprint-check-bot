@@ -121,7 +121,9 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 				if err != nil {
 					return "", nil, err
 				}
-
+				log.Println(file.Name())
+				log.Println(file.Stat())
+				log.Println("start NewImageFromReader")
 				image, err := vision.NewImageFromReader(file)
 				defer file.Close()
 				if err != nil {
