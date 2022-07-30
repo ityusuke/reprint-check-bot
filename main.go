@@ -48,7 +48,10 @@ func main() {
 	}
 
 	engine := gin.Default()
-	engine.GET(lineMessageAPICallBackEndpoint, func(c *gin.Context) {
+	engine.GET("/ping", func(c *gin.Context) {
+		log.Print("pong")
+	})
+	engine.POST(lineMessageAPICallBackEndpoint, func(c *gin.Context) {
 		err = exec(lineClient, visClient, ctx, c)
 		if err != nil {
 			log.Print(err)
