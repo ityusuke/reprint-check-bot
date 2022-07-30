@@ -112,16 +112,20 @@ func extractImageFromLINEMessage(lineClient *linebot.Client, events []*linebot.E
 			switch message := event.Message.(type) {
 			case *linebot.ImageMessage:
 				file, err := os.Create("sample.png")
+				log.Println(file)
 				if err != nil {
 					return nil, "", err
 				}
 
+				log.Println("GetMessageContent")
 				content, err := lineClient.GetMessageContent(message.ID).Do()
 				if err != nil {
 					return nil, "", err
 				}
+				log.Println(content)
 				defer content.Content.Close()
 				io.Copy(file, content.Content)
+				log.Println(file)
 				return file, event.ReplyToken, nil
 			default:
 				if _, err := lineClient.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("画像を送信してください")).Do(); err != nil {
